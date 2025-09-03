@@ -3,6 +3,7 @@ import { Page } from "puppeteer";
 export interface Listing {
   title: string;
   price: number;
+  price_text: string;
   url: string;
 }
 
