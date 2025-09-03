@@ -36,8 +36,8 @@ export class Mediamarkt implements Platform {
 
   async scrapeItemPage(page: Page): Promise<Listing> {
     try {
+      console.log("Start scrapeItemPage");
       const data = await page.evaluate(() => {
-        console.log("Start scrapeItemPage");
         const title =
           document.querySelector("h1")?.textContent?.trim() || "N/A";
         const priceText =
@@ -48,7 +48,6 @@ export class Mediamarkt implements Platform {
           Number(priceText.replace(/[^\d,]/g, "").replace(",", ".")) || 0;
         return { title, price, priceText };
       });
-      console.log("Finish scrapeItemPage");
 
       return {
         title: data.title,

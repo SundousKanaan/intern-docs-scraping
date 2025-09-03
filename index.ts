@@ -47,7 +47,7 @@ async function main() {
     limit
   );
 
-  console.log({ listingUrls });
+  console.log("listingUrls count:", listingUrls.length);
 
   const browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
@@ -59,12 +59,13 @@ async function main() {
     const pageData = await currentPLatform.scrapeItemPage(page);
     data.push(pageData);
   }
-  await browser.close();
 
   console.log({ data });
+  console.log("data count:", data.length);
+
+  await browser.close();
 
   const jsonData = JSON.stringify(data, null, 2);
-  console.log({ jsonData });
 
   await writeFile(`${platform}.json`, jsonData, "utf-8");
   console.log("json is done");

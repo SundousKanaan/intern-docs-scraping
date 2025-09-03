@@ -67,8 +67,6 @@ export class Asos implements Platform {
         return { title, price, priceText };
       });
 
-      console.log("Finish scrapeItemPage");
-
       return {
         title: data.title,
         price: data.price,
