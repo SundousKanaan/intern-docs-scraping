@@ -41,19 +41,20 @@ async function main() {
   const PlatformClass = platforms[platform];
   const currentPLatform = new PlatformClass();
 
+  const browser = await puppeteer.launch({
+    headless: false,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+  const searchPage = await browser.newPage();
   const listingUrls = await currentPLatform.scrapeSearchPage(
-    null,
+    searchPage,
     searchTerm,
     limit
   );
 
-  console.log("listingUrls count:", listingUrls.length);
-
-  const browser = await puppeteer.launch({ headless: false });
-  const page = await browser.newPage();
-
   const data = [];
-
+  console.log("Start scrapeItemPage");
+  const page = await browser.newPage();
   for (const url of listingUrls) {
     await page.goto(url, { waitUntil: "domcontentloaded" });
     const pageData = await currentPLatform.scrapeItemPage(page);

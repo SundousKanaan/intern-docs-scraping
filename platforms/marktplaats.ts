@@ -5,15 +5,10 @@ export class Marktplaats implements Platform {
   name = "marktplaats";
 
   async scrapeSearchPage(
-    _page: Page,
+    page: Page,
     keyword: string,
     limit: number
   ): Promise<string[]> {
-    const browser = await puppeteer.launch({
-      headless: false,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
-    const page = await browser.newPage();
     let pageNumber = 1;
     const urls: string[] = [];
 
@@ -33,14 +28,12 @@ export class Marktplaats implements Platform {
       urls.push(...items);
       pageNumber++;
     }
-    await browser.close();
     return urls.slice(0, limit);
   }
 
   async scrapeItemPage(page: Page): Promise<Listing> {
     try {
       const data = await page.evaluate(() => {
-        console.log("Start scrapeItemPage");
         const title =
           document.querySelector("h1[class$='-title']")?.textContent?.trim() ||
           "N/A";

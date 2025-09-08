@@ -5,57 +5,38 @@ export class Asos implements Platform {
   name = "asos";
 
   async scrapeSearchPage(
-    _page: Page,
+    page: Page,
     keyword: string,
     limit: number
   ): Promise<string[]> {
-    try {
+    let pageNumber = 1;
+    let urls: string[] = [];
+
+    while (urls.length < limit) {
       console.log("Start scrapeSearchPage");
-
-      const browser = await puppeteer.launch({
-        headless: false,
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
-      });
-      const page = await browser.newPage();
-      await page.goto("https://www.asos.com/");
-
-      const sectionsUrls = await page.$$eval("a[class*='hero__cta']", (links) =>
-        links.map((link) => (link as HTMLAnchorElement).href)
+      await page.goto(
+        `https://www.asos.com/search/?q=${keyword}&page=${pageNumber}`
       );
 
-      const listingUrls = [];
+      const targetUrls = await page.$$eval(
+        "a[class*='productLink_']",
+        (links) => links.map((link) => (link as HTMLAnchorElement).href)
+      );
 
-      for (const sectionUrl of sectionsUrls) {
-        await page.goto(sectionUrl);
-        const urls = await page.$$eval("a[class^='cta']", (links) =>
-          links.map((link) => (link as HTMLAnchorElement).href)
-        );
+      urls = Array.from(new Set([...urls, ...targetUrls]));
 
-        for (const url of urls) {
-          await page.goto(url);
-          const targetUrls = await page.$$eval(
-            "a[class*='productLink_']",
-            (links) => links.map((link) => (link as HTMLAnchorElement).href)
-          );
-
-          listingUrls.push(targetUrls);
-        }
-      }
       console.log("Finish scrapeSearchPage");
-      await browser.close();
-
-      return listingUrls.flat().slice(0, limit);
-    } catch (e) {
-      console.error(e);
-      return [];
+      pageNumber++;
     }
+
+    console.log("===", urls.length);
+
+    return urls.flat().slice(0, limit);
   }
 
   async scrapeItemPage(page: Page): Promise<Listing> {
     try {
       const data = await page.evaluate(() => {
-        console.log("Start scrapeItemPage");
-
         const title =
           document.querySelector("h1")?.textContent?.trim() || "N/A";
         const priceText =

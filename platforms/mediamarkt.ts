@@ -5,38 +5,53 @@ export class Mediamarkt implements Platform {
   name = "mediamarkt";
 
   async scrapeSearchPage(
-    _page: Page,
+    page: Page,
     keyword: string,
     limit: number
   ): Promise<string[]> {
-    try {
-      console.log("start scrapeSearchPage");
+    let pageNumber = 1;
+    let targetPage;
+    let urls: string[] = [];
 
-      const browser = await puppeteer.launch({
-        headless: false,
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    const url = `https://www.mediamarkt.nl/nl/search.html?query=${keyword}`;
+    await page.goto(url, { waitUntil: "domcontentloaded" });
+    const finalUrl = page.url();
+    if (finalUrl.includes("specials/")) {
+      const afterSpecials = finalUrl.split("specials/")[1].split("?")[0];
+
+      const listingUrls = await page.$$eval("a.drTHIV", (links) => {
+        return links.map((link) => {
+          return link.href;
+        });
       });
 
-      const page = await browser.newPage();
-      await page.goto("https://www.mediamarkt.nl/");
-
-      const listingUrls = await page.$$eval("a[href*='/product/']", (links) =>
-        links.map((link) => (link as HTMLAnchorElement).href)
+      targetPage = listingUrls.find((url) =>
+        url.search(`${afterSpecials}-283`)
       );
-
-      await browser.close();
-      console.log("Finish scrapeSearchPage");
-
-      return listingUrls.slice(0, limit);
-    } catch (e) {
-      console.error(e);
-      return [];
     }
+
+    while (urls.length < limit) {
+      await page.goto(`${targetPage}?page=${pageNumber}`, {
+        waitUntil: "domcontentloaded",
+      });
+
+      const items = await page.$$eval("a[href*='/product/']", (links) => {
+        return links.map((link) => {
+          return link.href;
+        });
+      });
+
+      urls = Array.from(new Set([...urls, ...items]));
+
+      if (urls.length >= limit) break;
+      pageNumber++;
+    }
+
+    return urls.slice(0, limit);
   }
 
   async scrapeItemPage(page: Page): Promise<Listing> {
     try {
-      console.log("Start scrapeItemPage");
       const data = await page.evaluate(() => {
         const title =
           document.querySelector("h1")?.textContent?.trim() || "N/A";
