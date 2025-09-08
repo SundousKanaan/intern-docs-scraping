@@ -19,7 +19,7 @@ export class Mediamarkt implements Platform {
     if (finalUrl.includes("specials/")) {
       const afterSpecials = finalUrl.split("specials/")[1].split("?")[0];
 
-      const listingUrls = await page.$$eval("a.drTHIV", (links) => {
+      const listingUrls = await page.$$eval("a[data-test='mms-router-link-product-list-item-link']", (links) => {
         return links.map((link) => {
           return link.href;
         });

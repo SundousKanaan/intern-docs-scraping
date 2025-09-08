@@ -3,9 +3,9 @@ import { Mediamarkt } from "./platforms/mediamarkt";
 import { Asos } from "./platforms/asos";
 import puppeteer from "puppeteer";
 import { writeFile } from "fs/promises";
+import { Platform } from "./platforms/base";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const platforms: { [key: string]: any } = {
+const platforms: { [key: string]: new () => Platform } = {
   marktplaats: Marktplaats,
   mediamarkt: Mediamarkt,
   asos: Asos,
@@ -61,7 +61,7 @@ async function main() {
     data.push(pageData);
   }
 
-  console.log({ data });
+  // console.log({ data });
   console.log("data count:", data.length);
 
   await browser.close();
